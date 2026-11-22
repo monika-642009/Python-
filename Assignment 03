@@ -1,1 +1,49 @@
+def normalize_number(number):
+    return "".join(ch for ch in number if ch.isdigit())
+
+def merge_contacts(phone1, phone2):
+    merged = {}
+
+    for contact in phone1 + phone2:
+        name = contact["name"].strip().lower()
+        number = normalize_number(contact.get("number", ""))
+        email = contact.get("email", "").strip().lower()
+
+        if name not in merged:
+            merged[name] = {
+                "display_name": contact["name"].strip(),
+                "number": number,
+                "email": email
+            }
+        else:
+            if number and number not in merged[name]["number"].split(","):
+                old_number = merged[name]["number"]
+                merged[name]["number"] = (old_number + "," + number).strip(",")
+
+            if email and not merged[name]["email"]:
+                merged[name]["email"] = email
+
+    return merged
+
+
+phone1 = [
+    {"name": "Dr. Ravi", "number": "+91 98400 12345",
+     "email": "ravi@gmail.com"},
+    {"name": "Kumar", "number": "98765 43210",
+     "email": "kumar@gmail.com"}
+]
+
+phone2 = [
+    {"name": "Dr. Ravi", "number": "9840012345",
+     "email": "ravi@gmail.com"},
+    {"name": "Anu", "number": "9123456780",
+     "email": "anu@gmail.com"}
+]
+
+result = merge_contacts(phone1, phone2)
+
+for details in result.values():
+    print(details)
+This basic version merges contacts with the same normalized name. In a real contact app, matching by phone number as well as name would help identify more duplicates.
+
 
