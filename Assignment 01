@@ -1,1 +1,36 @@
+from decimal import Decimal, ROUND_HALF_UP
+
+RATE_CARDS = {
+    'standard': {'base': Decimal('30.00'), 'fat_step': Decimal('0.40'), 'snf_step': Decimal('0.30')},
+    'apr_jun':  {'base': Decimal('32.00'), 'fat_step': Decimal('0.45'), 'snf_step': Decimal('0.30')},
+}
+REF_FAT = Decimal('3.5')
+REF_SNF = Decimal('8.5')
+BONUS_LIMIT = Decimal('500')
+BONUS_PER_LITRE = Decimal('0.50')
+
+def rate_per_litre(fat, snf, season='standard'):
+    """Return the rate per litre for the selected season."""
+    card = RATE_CARDS[season]
+    fat_steps = int(((fat - REF_FAT) / Decimal('0.1')).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+    snf_steps = int(((snf - REF_SNF) / Decimal('0.1')).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+    rate = card['base'] + fat_steps * card['fat_step'] + snf_steps * card['snf_step']
+    return rate.quantize(Decimal('0.01'))
+
+def ten_day_payout(entries, season='standard'):
+    """Return the ten-day total, including a qualifying litre bonus."""
+    litres_total = sum((entry[0] for entry in entries), Decimal('0'))
+    total = Decimal('0.00')
+    for litres, fat, snf in entries:
+        rate = rate_per_litre(fat, snf, season)
+        total += (litres * rate).quantize(Decimal('0.01'))
+    if litres_total > BONUS_LIMIT:
+        total += (litres_total * BONUS_PER_LITRE).quantize(Decimal('0.01'))
+    return total.quantize(Decimal('0.01'))
+
+if __name__ == '__main__':
+    sample = [(Decimal('300'), Decimal('3.5'), Decimal('8.5')),
+              (Decimal('220'), Decimal('4.0'), Decimal('8.5'))]
+    print('Standard:', ten_day_payout(sample, 'standard'))
+    print('April-June:', ten_day_payout(sample, 'apr_jun'))
 
